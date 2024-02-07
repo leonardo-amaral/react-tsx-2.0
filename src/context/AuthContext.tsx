@@ -1,119 +1,80 @@
-import { jwtDecode } from 'jwt-decode'
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
-} from 'react'
-import { useLocalStorage } from '../hooks/useLocalStorage'
-import { api } from '../lib/axios'
+import { jwtDecode } from "jwt-decode";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import Login from "../pages/login";
+import { TUserJwt } from "../types/user.types";
 
-// Defina uma interface para os dados decodificados do token JWT
-interface DecodedTokenType {
-  features: string[]
-  roles: string[]
-  session_id: string
-  user: {
-    id: number
-    email: string
-    status: string
-    ip: string
-    created_at: string
-    validity_epoch: number
-    channel: string
-  }
-}
+type AuthProviderProps = {
+  children: React.ReactNode;
+};
 
-interface AuthProviderProps {
-  children: React.ReactNode
-}
+type AuthContextProps = {
+  user: TUserJwt | null;
+  setUser: (data: TUserJwt | null) => void;
+};
 
-interface AuthContextProps {
-  user: UserType | null
-  decodedToken: DecodedTokenType | null
-  login: (data: LoginProps) => void
-  logout: () => void
-  isAuthenticated: boolean
-}
-
-type UserType = {
-  token: string
-}
-
-type LoginProps = {
-  email: string
-  password: string
-  channel: 'ui'
-}
-
-const AuthContext = createContext({} as AuthContextProps)
+const AuthContext = createContext({} as AuthContextProps);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useLocalStorage({
-    keyName: '@fbc:token',
-    defaultValue: null
-  })
+  const [user, setUser] = useState<TUserJwt | null>(null);
+  const [userToken, _] = useLocalStorage({
+    keyName: "@fbc:token",
+    defaultValue: null,
+  });
 
-  const [decodedToken, setDecodedToken] = useState<DecodedTokenType | null>(
-    null
-  )
-  const [isAuthenticated, setIsAuthenticated] = useState(user !== 'null')
-
-  const login = async (data: LoginProps) => {
-    const response = await api.post('/auth/login', data)
-    setUser(response.data.token)
-
-    if (response.data) {
-      setIsAuthenticated(true)
-    }
-  }
-
-  const logout = async () => {
-    const response = await api.post('/auth/logout')
-    setUser(response.data)
-
-    if (response.data) {
-      setUser(null)
-      setIsAuthenticated(false)
-    }
-  }
-
-  const decodeToken = (token: string) => {
-    try {
-      const decodedData = jwtDecode(token) as DecodedTokenType
-      return decodedData
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      return null
-    }
-  }
+  const [isLoading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (user && user !== 'null') {
-      const decodedToken = decodeToken(user)
-      console.log(decodedToken)
+    setLoading(true);
 
-      setDecodedToken(decodedToken)
-    } else {
-      setDecodedToken(null)
+    if (userToken && userToken !== "null") {
+      try {
+        const decodedData = jwtDecode(userToken) as TUserJwt;
+        console.log(decodedData);
+        setUser(decodedData);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
     }
-  }, [user])
 
-  const value = useMemo(
-    () => ({
-      user,
-      decodedToken,
-      login,
-      logout,
-      isAuthenticated
-    }),
-    [isAuthenticated]
-  )
+    setLoading(false);
+  }, [userToken]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  if (isLoading) {
+    return <h1>Loading...</h1>;
+  }
+
+  if (!user) {
+    return (
+      <AuthContext.Provider
+        value={{
+          user,
+          setUser,
+        }}
+      >
+        <BrowserRouter>
+          <Routes>
+            <Route path="login" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthContext.Provider>
+    );
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
 export const useAuth = () => {
-  return useContext(AuthContext)
-}
+  return useContext(AuthContext);
+};
