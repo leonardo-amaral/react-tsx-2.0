@@ -1,4 +1,4 @@
-import { useApi } from '../../hooks/useApi'
+import { AdrressProps, useApi } from '../../hooks/useApi'
 
 interface GetSimulatorResponseProps {
   simulators: string[]
@@ -14,7 +14,7 @@ interface GetSimulatorModeResponseProps {
 }
 
 export const SimulatorController = () => {
-  const { api } = useApi()
+  const { api } = useApi(AdrressProps.GATEWAY)
 
   const getSimulatorMode = async (data: GetSimulatorModeBodyProps) => {
     const response = await api.post<GetSimulatorModeResponseProps>(
