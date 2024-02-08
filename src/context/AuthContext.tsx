@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import Login from '../pages/login'
-import { TUserJwt } from '../types/user.types'
+import { TUserJwt } from '../types/ios/user.types'
 
 type AuthProviderProps = {
   children: React.ReactNode
