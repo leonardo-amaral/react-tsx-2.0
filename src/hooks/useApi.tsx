@@ -1,8 +1,13 @@
 import axios from 'axios'
 
-export const useApi = () => {
+export enum AdrressProps {
+  GATEWAY = 'http://192.168.100.101:3000/',
+  TEMPLATE = 'http://localhost:2424/'
+}
+
+export const useApi = (address: string) => {
   const api = axios.create({
-    baseURL: 'http://192.168.100.101:3000/',
+    baseURL: address,
     headers: {
       Authorization: `Bearer ${localStorage.getItem('@fbc:token')}`
     }
