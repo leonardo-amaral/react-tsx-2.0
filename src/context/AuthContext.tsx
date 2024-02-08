@@ -1,48 +1,47 @@
-import { jwtDecode } from "jwt-decode";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import Login from "../pages/login";
-import { TUserJwt } from "../types/user.types";
+import { jwtDecode } from 'jwt-decode'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { useLocalStorage } from '../hooks/useLocalStorage'
+import Login from '../pages/login'
+import { TUserJwt } from '../types/user.types'
 
 type AuthProviderProps = {
-  children: React.ReactNode;
-};
+  children: React.ReactNode
+}
 
 type AuthContextProps = {
-  user: TUserJwt | null;
-  setUser: (data: TUserJwt | null) => void;
-};
+  user: TUserJwt | null
+  setUser: (data: TUserJwt | null) => void
+}
 
-const AuthContext = createContext({} as AuthContextProps);
+const AuthContext = createContext({} as AuthContextProps)
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<TUserJwt | null>(null);
+  const [user, setUser] = useState<TUserJwt | null>(null)
   const [userToken, _] = useLocalStorage({
-    keyName: "@fbc:token",
-    defaultValue: null,
-  });
+    keyName: '@fbc:token',
+    defaultValue: null
+  })
 
-  const [isLoading, setLoading] = useState<boolean>(true);
+  const [isLoading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true)
 
-    if (userToken && userToken !== "null") {
+    if (userToken && userToken !== 'null') {
       try {
-        const decodedData = jwtDecode(userToken) as TUserJwt;
-        console.log(decodedData);
-        setUser(decodedData);
+        const decodedData = jwtDecode(userToken) as TUserJwt
+        setUser(decodedData)
       } catch (error) {
-        console.error("Error decoding token:", error);
+        console.error('Error decoding token:', error)
       }
     }
 
-    setLoading(false);
-  }, [userToken]);
+    setLoading(false)
+  }, [userToken])
 
   if (isLoading) {
-    return <h1>Loading...</h1>;
+    return <h1>Loading...</h1>
   }
 
   if (!user) {
@@ -50,7 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       <AuthContext.Provider
         value={{
           user,
-          setUser,
+          setUser
         }}
       >
         <BrowserRouter>
@@ -60,21 +59,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           </Routes>
         </BrowserRouter>
       </AuthContext.Provider>
-    );
+    )
   }
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        setUser,
+        setUser
       }}
     >
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
 export const useAuth = () => {
-  return useContext(AuthContext);
-};
+  return useContext(AuthContext)
+}
